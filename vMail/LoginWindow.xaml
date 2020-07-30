@@ -1,0 +1,18 @@
+﻿<Window x:Class="vMail.LoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:vMail"
+        mc:Ignorable="d"
+        Title="LoginWindow" Height="219.56" Width="527.033" Icon="assets/logo.png">
+    <Grid>
+        <TextBox Name="LoginUserTextBox" HorizontalAlignment="Left" Height="23" Margin="193,41,0,0" TextWrapping="Wrap" Text="1527842029@qq.com" VerticalAlignment="Top" Width="296" FontSize="14"/>
+        <TextBox Name="LoginPwdTextBox" HorizontalAlignment="Left" Height="23" Margin="193,83,0,0" TextWrapping="Wrap" Text="hxqnopqdryznbage" VerticalAlignment="Top" Width="296" FontSize="14"/>
+        <Image HorizontalAlignment="Left" Height="100" Margin="30,26,0,0" VerticalAlignment="Top" Width="100" Source="assets/logo.png"/>
+        <Label Content="User:" HorizontalAlignment="Left" Margin="148,39,0,0" VerticalAlignment="Top" FontSize="14"/>
+        <Label Content="Pwd:" HorizontalAlignment="Left" Margin="150,80,0,0" VerticalAlignment="Top" FontSize="14"/>
+        <Image HorizontalAlignment="Left" Height="33" Margin="456,126,0,0" VerticalAlignment="Top" Width="38" MouseDown="LoginBtnClick" Source="assets/login.png"/>
+
+    </Grid>
+</Window>

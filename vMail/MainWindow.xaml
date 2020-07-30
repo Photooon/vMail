@@ -5,40 +5,62 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:vMail"
         mc:Ignorable="d"
-        Title="vMail" Height="636" Icon="logo.png" Width="768">
+        Title="vMail" Height="636" Icon="assets/logo.png" Width="768">
     <DockPanel Margin="0,0,0,0">
         <StatusBar DockPanel.Dock="Bottom">
             <StatusBarItem>
                 <TextBlock Name="StatusTextBlock" Width="580" />
             </StatusBarItem>
         </StatusBar>
-        <TabControl Margin="0,0,0,0.4" Width="748">
+        <TabControl Name="mainTabControl" Margin="0,0,0,0.4" Width="748">
             <TabItem Header="写信" FontSize="18" Width="72">
                 <Grid Background="White">
-                    <TextBox Name="DataTextBox" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" Width="476" Height="369" FontSize="16" Margin="92,158,0,0" Text="Hello, it's sent from vMail!"/>
-                    <TextBox Name="ToTextBox" HorizontalAlignment="Left" Margin="92,91,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="299" Text="2018302120319@whu.edu.cn" MaxLines="1"/>
-                    <Label Content="To:" HorizontalAlignment="Left" Margin="51,87,0,0" VerticalAlignment="Top"/>
-                    <TextBox x:Name="SubjectTextBox" HorizontalAlignment="Left" Margin="92,124,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="476" Text="Hello" MaxLines="1"/>
-                    <Label Content="Subject:" HorizontalAlignment="Left" Margin="9,116,0,0" VerticalAlignment="Top"/>
-                    <Button Name="SendBtn" Content="Send" HorizontalAlignment="Left" Margin="612,158,0,0" VerticalAlignment="Top" Height="28" Width="95" Click="SendBtnClick"/>
-                    <TextBox x:Name="FromTextBox" HorizontalAlignment="Left" Margin="93,31,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="298" Text="1527842029@qq.com" MaxLines="1"/>
-                    <Label Content="From:" HorizontalAlignment="Left" Margin="29,27,0,0" VerticalAlignment="Top"/>
-                    <TextBox x:Name="KeyTextBox" HorizontalAlignment="Left" Margin="93,61,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="298" Text="hxqnopqdryznbage" MaxLines="1"/>
-                    <Label Content="Key:" HorizontalAlignment="Left" Margin="43,57,0,0" VerticalAlignment="Top"/>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="24*"/>
+                        <RowDefinition Height="5*"/>
+                    </Grid.RowDefinitions>
+                    <TextBox Name="DataTextBox" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" Width="628" Height="363" FontSize="16" Margin="80,86,0,0" Text="Hello, this is an Email sent from vMail!"/>
+                    <TextBox Name="ToTextBox" HorizontalAlignment="Left" Margin="80,14,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="551" Text="2018302120319@whu.edu.cn" MaxLines="1" Height="25"/>
+                    <Label Content="收件人:" HorizontalAlignment="Left" Margin="5,10,0,0" VerticalAlignment="Top" Height="34" Width="73"/>
+                    <Label Content="主题:" HorizontalAlignment="Left" Margin="25,44,0,0" VerticalAlignment="Top" Height="34" Width="50"/>
+                    <Label Content="正文:" HorizontalAlignment="Left" Margin="23,79,0,0" VerticalAlignment="Top" Height="34" Width="52"/>
+                    <TextBox x:Name="SubjectTextBox" HorizontalAlignment="Left" Margin="80,48,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="551" Text="Hello my friend!" MaxLines="1" Height="25"/>
+                    <Image HorizontalAlignment="Left" Height="50" Margin="652,21,0,0" VerticalAlignment="Top" Width="50" MouseDown="SendBtnClick" Source="assets/send.png"/>
+                    <Image HorizontalAlignment="Left" Height="37" Margin="25,23,0,0" Grid.Row="1" VerticalAlignment="Top" Width="42" MouseDown="AddAttachmentBtnClick" Source="assets/add.png"/>
+                    <ListBox Name="SendAttachmentListBox" HorizontalAlignment="Left" Height="70" Margin="80,10,0,0" Grid.Row="1" VerticalAlignment="Top" Width="628">
+                        <ListBox.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="删除" Click="SendAttachmentDeleteMenuItemClick">
+                                    <MenuItem.Icon>
+                                        <Image Source="assets/delete.png"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </ContextMenu>
+                        </ListBox.ContextMenu>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Height="31" Margin="5,0,5,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="18*"/>
+                                        <ColumnDefinition Width="18*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Image Source="{Binding Path=ImageName}" Grid.Column="0" Margin="0,0,3,0" />
+                                    <Label Content="{Binding Path=Name}" Grid.Column="1" Margin="1,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Height="30"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
                 </Grid>
             </TabItem>
             <TabItem Header="收信箱" FontSize="18" Width="82">
                 <Grid Background="White">
                     <Grid.RowDefinitions>
                         <RowDefinition/>
-                        <RowDefinition Height="452.66"/>
+                        <RowDefinition Height="486.4"/>
                     </Grid.RowDefinitions>
-                    <TextBox Name="POPUserTextBox" HorizontalAlignment="Left" Margin="83,31,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="247" Height="25" Text="1527842029@qq.com" MaxLines="1"/>
-                    <TextBox Name="POPKeyTextBox" HorizontalAlignment="Left" Margin="83,61,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="247" Height="25" Text="hxqnopqdryznbage" MaxLines="1"/>
-                    <Label Content="User:" HorizontalAlignment="Left" Margin="24,27,0,0" VerticalAlignment="Top" Height="33" Width="53"/>
-                    <Label Content="Key:" HorizontalAlignment="Left" Margin="32,57,0,0" VerticalAlignment="Top" Height="33" Width="46"/>
-                    <Button Content="Fetch" HorizontalAlignment="Left" Margin="362,51,0,0" VerticalAlignment="Top" Width="71" Height="27" Click="FetchBtnClick"/>
-                    <ListBox Name="AbstractListBox" Grid.Row="1" HorizontalAlignment="Center" Width="730" VerticalAlignment="Top" Height="439" Margin="0,5,0,0">
+                    <Image HorizontalAlignment="Left" Height="35" Margin="23,15,0,0" VerticalAlignment="Top" Width="35" MouseDown="FetchBtnClick" Source="assets/fetch.png"/>
+                    <ListBox Name="HeadingsListBox" Grid.Row="1" HorizontalAlignment="Center" Width="730" VerticalAlignment="Top" Height="470" Margin="6,5.2,6.4,0" SelectionChanged="ListBoxSelectedChanged">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <Grid Margin="0,10,0,0">
@@ -52,37 +74,50 @@
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-                    <Button Content="Delete" HorizontalAlignment="Left" Margin="651,51,0,0" VerticalAlignment="Top" Width="80" Height="27" Click="DeleteBtnClick"/>
+                    <Image HorizontalAlignment="Left" Height="42" Margin="87,12,0,0" VerticalAlignment="Top" Width="41" MouseDown="DeleteBtnClick" Source="assets/remove.png" RenderTransformOrigin="-11.117,-0.086"/>
                 </Grid>
             </TabItem>
-            <TabItem Header="信件" FontSize="18" Width="72">
+            <TabItem Header="信件" Name="detailTabItem" FontSize="18" Width="72">
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="32*"/>
-                        <RowDefinition Height="107*"/>
+                        <RowDefinition Height="127*"/>
+                        <RowDefinition Height="349*"/>
+                        <RowDefinition Height="75*"/>
                     </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="46*"/>
-                        <ColumnDefinition Width="7*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBox Name="mFromTextBox" TextWrapping="Wrap" Text="2018302120319@whu.edu.cn" Margin="78,25,27,76.2" MaxLines="1"/>
+                    <TextBox Name="detailFromTextBox" TextWrapping="Wrap" Text="2018302120319@whu.edu.cn" Margin="78,25,173.4,76.2" MaxLines="1"/>
                     <Label Content="收件人:" HorizontalAlignment="Left" Margin="3,56,0,0" VerticalAlignment="Top" Height="34" Width="70"/>
                     <Label Content="发件人:" HorizontalAlignment="Left" Margin="3,22,0,0" VerticalAlignment="Top" Height="34" Width="70"/>
                     <Label Content="主题:" HorizontalAlignment="Left" Margin="22,91,0,0" VerticalAlignment="Top" Height="34" Width="56"/>
-                    <TextBox Name="mToTextBox" TextWrapping="Wrap" Text="1527842029@qq.com" Margin="78,61,27,40.2" MaxLines="1"/>
-                    <TextBox Name="mDataTextBox" TextWrapping="Wrap" Text="Hello" Margin="12,2.5,2.5,5" Grid.Row="1"/>
-                    <TextBox Name="mSubjectTextBox" TextWrapping="Wrap" Text="A hello email from whu" Margin="78,95,27,5.2" MaxLines="1"/>
-                    <Label Name="mDateLabel" Content="06-24" Grid.Row="0" Grid.Column="1" Margin="19,95,18.4,1.2" HorizontalAlignment="Center"/>
-                    <Button Content="Test" Width="75" Grid.Column="1" Margin="10,17,13.4,76.2" Click="TestBtnClick"/>
-                    <TextBox Name="TestTextBox" Grid.Column="1" Height="23" TextWrapping="Wrap" Text="1" Margin="26,64,18.4,40.2"/>
-                    <ListBox Grid.Row="1" Margin="2.5,2.5,5,5" Grid.Column="1">
-                        <ListBoxItem Height="65" Width="70" Margin="0,5,0,0">
-                            <Image Source="logo.png" Stretch="UniformToFill" Height="55" Width="64" HorizontalAlignment="Center"/>
-                        </ListBoxItem>
+                    <Label Content="正文:" HorizontalAlignment="Left" Margin="22,123,0,0" VerticalAlignment="Top" Height="34" Width="56" Grid.RowSpan="2"/>
+                    <TextBox Name="detailToTextBox" TextWrapping="Wrap" Text="1527842029@qq.com" Margin="78,61,173.4,40.2" MaxLines="1"/>
+                    <TextBox Name="detailDataTextBox" TextWrapping="Wrap" Text="Hello, my name is Gorge." Margin="78,2.8,10.4,3" Grid.Row="1"/>
+                    <TextBox Name="detailSubjectTextBox" TextWrapping="Wrap" Text="An Email from WHU" Margin="78,95,10.4,5.2" MaxLines="1"/>
+                    <Label Name="detailDateLabel" Content="06-24" Grid.Row="0" Margin="673,25,10.4,71.2" HorizontalAlignment="Center"/>
+                    <ListBox Name="ReceiveAttachmentListBox" Margin="78,10,10.4,0.2" Grid.Row="2" BorderThickness="0">
+                        <ListBox.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="下载" Click="DownloadMenuItemClick">
+                                    <MenuItem.Icon>
+                                        <Image Source="assets/download.png"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </ContextMenu>
+                        </ListBox.ContextMenu>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Height="31" Margin="5,0,5,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="18*"/>
+                                        <ColumnDefinition Width="18*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Image Source="{Binding Path=ImageName}" Grid.Column="0" Margin="0,0,3,0" />
+                                    <Label Content="{Binding Path=Name}" Grid.Column="1" Margin="1,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Height="30"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
                     </ListBox>
                 </Grid>
             </TabItem>
-
         </TabControl>
     </DockPanel>
 </Window>

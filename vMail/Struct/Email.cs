@@ -4,50 +4,20 @@ using System.Text;
 
 namespace vMail
 {
-    /* 内容类型 */
-    enum Content_Type
-    {
-        Text_HTML,          // text/html
-        Text_Plain,         // text/plain
-        Multi_Alter,        // multipart/alternative
-        Multi_Mixed,        // multipart/mixed
-        Multi_Related,      // multipart/related
-        Appli_Pdf,          // application/pdf
-        Image_png,          // image/png
-        Undefined           // 不支持的类型
-    }
-
-    /* 编码类型 */
-    enum Transfer_Encoding
-    {
-        Base64,             // Base-64编码
-        Quoted_Printable,   // 可打印字符编码
-        Bit8,               // 8-Bit编码
-        Bit7,               // 7-Bit编码
-        Undefined,          // 不支持的类型
-    }
-
-    /* 附件展示方式 */
-    enum Content_Disposition
-    {
-        Attachment,         // 附在尾部
-        Inline,             // 在邮件内显示
-    }
-
     /* 信头 */
     class Heading
     {
-        private const int MaxFromStrLength = 18;
-        private const int MaxSubjectStrLength = 30;
+        private const int MaxFromStrLength = 18;            // From字段的最大显示长度
+        private const int MaxSubjectStrLength = 30;         // Subject字段的最大显示长度
 
-        public int Id { get; set; }
-        public String Subject { get; set; }
-        public DateTime Date { get; set; }
-        public String From { get; set; }
-        public String To { get; set; }
-        public bool IsSelected { get; set; }
+        public int Id { get; set; }                         // 邮件的ID
+        public String Subject { get; set; }                 // 邮件的Subject
+        public DateTime Date { get; set; }                  // 邮件的Date
+        public String From { get; set; }                    // 邮件的From
+        public String To { get; set; }                      // 邮件的To
+        public bool IsSelected { get; set; }                // 邮件是否被选中
 
-        public String DateStr
+        public String DateStr                               // 字符串格式的日期
         {
             get
             {
@@ -55,7 +25,7 @@ namespace vMail
             }
         }
 
-        public Heading()
+        public Heading()                                    // 默认构造函数
         {
             Id = -1;
             Subject = "";
@@ -65,8 +35,7 @@ namespace vMail
             IsSelected = false;
         }
 
-        /* 修剪过长字段 */
-        public Heading Trim()
+        public Heading Trim()                               // 对字段进行裁剪，以便显示
         {
             /* 修减From */
             string[] tmp = From.Split('\t');
@@ -92,8 +61,8 @@ namespace vMail
     class Body
     {
         /* 固有的属性 */
-        public Content_Type ContentType { get; set; }
-        public Transfer_Encoding EncodeType { get; set; }
+        public Content_Type ContentType { get; set; }       // Content-Type字段类型
+        public Transfer_Encoding EncodeType { get; set; }   // Content-Transfer-Encoding字段类型
 
         /* 一些可能会有的属性，依据ContentType而定 */
         public String Boundary { get; set; }
@@ -121,11 +90,24 @@ namespace vMail
             }
         }
 
-        public Body()
+        public bool IsAttachment                            // 是否为附件类型
+        { 
+            get
+            {
+                if (ContentType == Content_Type.Appli_Pdf)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
+        public Body()                                       // 默认构造函数
         {
             ContentType = Content_Type.Text_HTML;
             EncodeType = Transfer_Encoding.Base64;
-            Boundary = "--vMail";
+            Boundary = "----=_Part_908473_394990143.1594909720513";
             Charset = Encoding.UTF8;
             Name = "";
             Disposition = Content_Disposition.Attachment;
@@ -133,7 +115,7 @@ namespace vMail
             SubBodies = new List<Body>();
         }
 
-        public string DataStr
+        public string Text                                  // 获取所有文本
         {
             get
             {
@@ -143,15 +125,83 @@ namespace vMail
                 {
                     foreach (Body body in SubBodies)
                     {
-                        str += body.DataStr;
+                        str += body.Text;
                     }
                 }
-                else
+                else if (ContentType == Content_Type.Text_HTML || ContentType == Content_Type.Text_Plain)    // 文本类型
                 {
                     str += Charset.GetString(Data);
                 }
 
                 return str;
+            }
+        }
+
+        public List<Attachment> Attachments                 // 获取所有附件
+        {
+            get
+            {
+                List<Attachment> attachments = new List<Attachment>();
+
+                if (IsMulti)
+                {
+                    foreach (Body body in SubBodies)
+                    {
+                        attachments.AddRange(body.Attachments);
+                    }
+                }
+                else if (ContentType == Content_Type.Appli_Pdf || ContentType == Content_Type.Image_png)    // 附件类型
+                {
+                    Attachment attachment = new Attachment();
+                    attachment.Name = Name;
+                    attachment.Data = Data;
+                    attachments.Add(attachment);
+                }
+
+                return attachments;
+            }
+        }
+    }
+
+    /* 附件 */
+    class Attachment
+    {
+        public String Name { get; set; }        // 附件名
+        public byte[] Data { get; set; }        // 附件体
+
+        public String ImageName                 // 用户界面显示的小图标图片资源名
+        {
+            get
+            {
+                string type = Name.Split('.')[1].ToLower();
+                if (type == "pdf")
+                {
+                    return "assets/pdf.png";
+                }
+                else if (type == "png")
+                {
+                    return "assets/image.png";
+                }
+                else
+                {
+                    return "assets/logo.png";
+                }
+            }
+        }
+
+        public Content_Type ContentType         // 附件的类型
+        {
+            get
+            {
+                string type = Name.Split('.')[1].ToLower();
+                if (type == "pdf")
+                {
+                    return Content_Type.Appli_Pdf;
+                }
+                else
+                {
+                    return Content_Type.Appli_Pdf;
+                }
             }
         }
     }

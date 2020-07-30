@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -7,7 +8,16 @@ namespace vMail
 {
     class MIME
     {
-        private static string TransEncodedField(string str)   // 处理经过编码了的字段(当字段含有中文时)
+        private static string EncodeField(string str)                   // 将字段值编码(含非ASCII码时)
+        {
+            string utf8Str = MyEncoder.EncodeWithUTF8(str);
+            string base64Str = MyEncoder.EncodeWithBase64(utf8Str);
+
+            string encodedFieldStr = String.Format("=?UTF-8?B?{0}?=", base64Str);
+            return encodedFieldStr;
+        }
+
+        private static string DecodeField(string str)                   // 将字段值解码(含非ASCII码时)
         {
             string decodedField = "";
 
@@ -40,7 +50,7 @@ namespace vMail
             return decodedField;
         }
 
-        private static string GetContentTypeStr(Content_Type type)
+        private static string GetContentTypeStr(Content_Type type)      // 将Content-Type转为字符串
         {
             switch (type)
             {
@@ -54,12 +64,16 @@ namespace vMail
                     return "multipart/mixed";
                 case Content_Type.Multi_Related:
                     return "multipart/related";
+                case Content_Type.Appli_Pdf:
+                    return "application/pdf";
+                case Content_Type.Image_png:
+                    return "image/png";
                 default:
-                    return "text/plain";
+                    return "application/octet-stream";
             }
         }
 
-        private static Content_Type GetContentType(string input)    // 将字符串转为Content-Type
+        private static Content_Type GetContentType(string input)        // 将字符串转为Content-Type
         {
             input = input.ToLower();
             if (input == "text/plain")
@@ -96,7 +110,7 @@ namespace vMail
             }
         }
 
-        private static Transfer_Encoding GetEncodingType(string input)
+        private static Transfer_Encoding GetEncodingType(string input)  // 将字符串转为Encode-Type
         {
             if (input.ToUpper() == "BASE64")
             {
@@ -120,9 +134,9 @@ namespace vMail
             }
         }
 
-        private static string GetBoundary(string input)
+        private static string GetBoundary(string input)                 // 捕获Boundary属性
         {
-            string boundaryPattern = "boundary=[ ]*(.*)[ ]*(;|\r)";
+            string boundaryPattern = "boundary=[ ]*([^;]*)[ ]*(;|\r)";
             Match bmatch = Regex.Match(input, boundaryPattern);
             if (bmatch.Success)
             {
@@ -134,7 +148,7 @@ namespace vMail
             }
         }
 
-        private static Encoding GetCharset(string input)
+        private static Encoding GetCharset(string input)                // 捕获Charset属性
         {
             string charsetPattern = "charset=[ ]*(.*)[ ]*(\r)";
             Match cmatch = Regex.Match(input, charsetPattern);
@@ -148,7 +162,7 @@ namespace vMail
             }
         }
 
-        private static string GetName(string input)
+        private static string GetName(string input)                     // 捕获Name属性
         {
             string charsetPattern = "name=[ ]*(.*)[ ]*(\r)";
             Match cmatch = Regex.Match(input, charsetPattern);
@@ -162,7 +176,7 @@ namespace vMail
             }
         }
 
-        private static Content_Disposition GetDisposition(string input)
+        private static Content_Disposition GetDisposition(string input) // 捕获Disposition属性
         {
             string disPattern = "(\r\n|\n)Content-Disposition:[ ]*(.*)[ ]*;.*(\r)";
             Match dismatch = Regex.Match(input, disPattern);
@@ -183,31 +197,7 @@ namespace vMail
             }
         }
 
-        private static Transfer_Encoding GetTransferEncoding(string encodeTypeStr)      // 将字符串转为编码类型
-        {
-            if (encodeTypeStr.ToUpper() == "BASE64")
-            {
-                return Transfer_Encoding.Base64;
-            }
-            else if (encodeTypeStr.ToUpper() == "7BIT")
-            {
-                return Transfer_Encoding.Bit7;
-            }
-            else if (encodeTypeStr.ToUpper() == "8BIT")
-            {
-                return Transfer_Encoding.Bit8;
-            }
-            else if (encodeTypeStr.ToUpper() == "QUOTED-PRINTABLE")
-            {
-                return Transfer_Encoding.Quoted_Printable;
-            }
-            else
-            {
-                return Transfer_Encoding.Undefined;
-            }
-        }
-
-        private static string HeadingToStr(Heading heading)
+        private static string HeadingToStr(Heading heading)             // 将信头转为字符串
         {
             string headStr = "";
 
@@ -219,8 +209,7 @@ namespace vMail
             headStr += String.Format("To: {0}\r\n", heading.To);
 
             // Subject
-            // TODO 处理中文的subject以及字段分行
-            headStr += String.Format("Subject: {0}\r\n", heading.Subject);
+            headStr += String.Format("Subject: {0}\r\n", EncodeField(heading.Subject));
 
             // Date
             headStr += String.Format("Date: {0}\r\n", heading.Date.ToString("r"));
@@ -231,39 +220,52 @@ namespace vMail
             return headStr;
         }
 
-        private static string BodyToStr(Body body)
+        private static string BodyToStr(Body body)                      // 将信体转为字符串
         {
             string bodyStr = "";
 
             // Content-Type
             if (body.IsMulti)
             {
-                bodyStr += String.Format("Content-Type: {0};\r\n boundary=\"{1}\"\r\n", GetContentTypeStr(body.ContentType), body.Boundary);
+                bodyStr += String.Format("Content-Type: {0};\r\n\tboundary=\"{1}\"\r\n", GetContentTypeStr(body.ContentType), body.Boundary);
+            }
+            else if (body.IsAttachment)
+            {
+                bodyStr += String.Format("Content-Type: {0};\r\n\tname=\"{1}\"\r\n", GetContentTypeStr(body.ContentType), body.Name);
             }
             else
             {
-                bodyStr += String.Format("Content-Type: {0};\r\n charset=\"{1}\"\r\n", GetContentTypeStr(body.ContentType), "utf-8");
+                bodyStr += String.Format("Content-Type: {0};\r\n\tcharset=\"{1}\"\r\n", GetContentTypeStr(body.ContentType), "UTF-8");
             }
 
             // Content-Transfer-Encoding
-            bodyStr += String.Format("Content-Transfer-Encoding: base64\r\n");
+            if (!body.IsMulti)
+            {
+                bodyStr += String.Format("Content-Transfer-Encoding: base64\r\n");
+            }
+
+            // Other Attributes
+            if (body.IsAttachment)
+            {
+                bodyStr += String.Format("Content-Disposition: attachment; filename=\"{0}\"\r\n", body.Name);
+            }
 
             /* 构建邮件体 */
             if (body.IsMulti)
             {
                 foreach (Body subBody in body.SubBodies)
                 {
-                    bodyStr += String.Format("\r\n--{0}\r\n\r\n", body.Boundary);      // 添加起头
+                    bodyStr += String.Format("\r\n--{0}\r\n", body.Boundary);       // 添加起头
                     bodyStr += BodyToStr(subBody);
                 }
-                bodyStr += String.Format("\r\n--{0}--\r\n", body.Boundary);            // 添加结尾
+                bodyStr += String.Format("\r\n--{0}--\r\n", body.Boundary);         // 添加结尾
             }
             else
             {
-                string base64Data = MyEncoder.EncodeWithBase64(MyEncoder.EncodeWithUTF8(body.Data));     // 先统一编码为utf8，再编码为base64
+                string base64Data = MyEncoder.EncodeWithBase64(body.Data);          // 编码为base64
                 string dstStr = "";
                 dstStr += "\r\n";
-                for (int i = 0; i < base64Data.Length; i += 75)                           // 保证每行不超过80字符
+                for (int i = 0; i < base64Data.Length; i += 75)                     // 保证每行不超过80字符
                 {
                     if (i + 75 < base64Data.Length)
                     {
@@ -286,14 +288,14 @@ namespace vMail
         {
             string raw = rawStr.Replace("\r\n ", " ").Replace("\r\n\t", " ");          // 展开折叠的字段
 
-            Heading abstractEmail = new Heading();
+            Heading heading = new Heading();
 
             /* From处理*/
             Match match = Regex.Match(raw, "(\r\n|\n)?From:(.*)(<.*@.*>)(\r\n|\n)");            //子表达式2是发件人名称，子表达式3是发件人邮箱，From可能是起始行，所以\r\n加了?
             if (match.Success)                                                                  // 附上了发件人时
             {
-                abstractEmail.From = TransEncodedField(match.Groups[2].Value.Trim().Trim('"')) + "   ";         // 发件人
-                abstractEmail.From += TransEncodedField(match.Groups[3].Value.Trim(new char[] { '<', '>' }));  // 发件邮箱
+                heading.From = DecodeField(match.Groups[2].Value.Trim().Trim('"')) + "   ";         // 发件人
+                heading.From += DecodeField(match.Groups[3].Value.Trim(new char[] { '<', '>' }));  // 发件邮箱
             }
             else                                                                                // 没有附上发件人时
             {
@@ -301,7 +303,7 @@ namespace vMail
 
                 if (match.Success)
                 {
-                    abstractEmail.From = TransEncodedField(match.Groups[2].Value.Trim());
+                    heading.From = DecodeField(match.Groups[2].Value.Trim());
                 }
             }
 
@@ -309,8 +311,8 @@ namespace vMail
             match = Regex.Match(raw, "(\r\n|\n)To:(.*)(<.*@.*>)(\r\n|\n)");    // 同上
             if (match.Success)                                                                  // 附上了收件人时
             {
-                abstractEmail.To = TransEncodedField(match.Groups[2].Value.Trim().Trim('"') + "   ");         // 收件人
-                abstractEmail.To += TransEncodedField(match.Groups[3].Value.Trim(new char[] { '<', '>' }));   // 收件人邮箱
+                heading.To = DecodeField(match.Groups[2].Value.Trim().Trim('"') + "   ");         // 收件人
+                heading.To += DecodeField(match.Groups[3].Value.Trim(new char[] { '<', '>' }));   // 收件人邮箱
             }
             else                                                                                // 没有附收件人时
             {
@@ -318,7 +320,7 @@ namespace vMail
 
                 if (match.Success)
                 {
-                    abstractEmail.To = TransEncodedField(match.Groups[2].Value.Trim());
+                    heading.To = DecodeField(match.Groups[2].Value.Trim());
                 }
             }
 
@@ -328,11 +330,11 @@ namespace vMail
             {
                 string[] fields = match.Groups[2].Value.Split(' ');       // 将可能分成了多段的字段切割开，逐个处理后合并
 
-                abstractEmail.Subject = "";
+                heading.Subject = "";
                 for (int i = 0; i < fields.Length; i++)
                 {
                     string tmp = fields[i].Trim('"');
-                    abstractEmail.Subject += TransEncodedField(tmp);
+                    heading.Subject += DecodeField(tmp);
                 }
             }
 
@@ -344,7 +346,7 @@ namespace vMail
                 {
                     string dateStr = match.Groups[2].Value.Trim().Trim('"');
                     DateTime date = Convert.ToDateTime(dateStr);
-                    abstractEmail.Date = date;
+                    heading.Date = date;
                 }
                 catch (Exception)
                 {
@@ -358,14 +360,14 @@ namespace vMail
 
 
 
-            abstractEmail.Id = index;
-            abstractEmail.IsSelected = false;
+            heading.Id = index;
+            heading.IsSelected = false;
 
-            return abstractEmail;
+            return heading;
         }
 
         /* 将字符串转为信体结构 */
-        public static Body GetBody(string rawStr)            // MIME String -> Email Body Structure
+        public static Body GetBody(string rawStr)
         {
             Body body = new Body();
 
@@ -373,7 +375,7 @@ namespace vMail
 
 
             /* 处理Content-Type和Transfer-Encoding-Type */
-            string contentTypePattern = "(\r\n|\n)Content-Type:(.*);(.*)(\r\n|\n)";           // Content-Type匹配模式
+            string contentTypePattern = "(\r\n|\n)Content-Type:([^;]*);(.*)(\r\n|\n)";           // Content-Type匹配模式
             string encodingTypePattern = "(\r\n|\n)Content-Transfer-Encoding:[ ]*(.*)[ ]*(\r\n|\n)";    // Transfer-Encoding-Type匹配模式
             Match conmatch = Regex.Match(unfoledRawStr, contentTypePattern);
             Match enmatch = Regex.Match(unfoledRawStr, encodingTypePattern);
@@ -401,6 +403,8 @@ namespace vMail
                 /* 处理每个子部分 */
                 for (int i = 1; i < parts.Length; i++)                      // 忽略第一部分，因为是信头
                 {
+                    if (parts[i] == "\r\n" || parts[i] == "\r\n\r\n" || parts[i] == "")         // 跳过无意义的部分
+                        continue;
                     body.SubBodies.Add(GetBody(parts[i]));                  // 递归处理子信体
                 }
             }
@@ -413,23 +417,31 @@ namespace vMail
                 string data = "";
                 for (int i = 1; i < strs.Length; i++)                       // 跳过信头
                 {
-                    string contentStr = strs[i].Replace("=\r\n", "").Replace("\r\n", "");        // 去除所有换行标记
+                    if (strs[i] == "\r\n" || strs[i] == "\r\n\r\n" || strs[i] == "")            // 跳过无意义的部分
+                        continue;
 
-                    switch (body.EncodeType)                                // 依据不同编码进行解码
+                    string contentStr;
+                    switch (body.EncodeType)                                        // 依据不同编码进行解码
                     {
                         case Transfer_Encoding.Base64:
+                            contentStr = strs[i].Replace("\r\n", "");               // 去除所有换行标记
                             data += (MyEncoder.DecodeWithBase64(contentStr, body.Charset) + "\n");
                             break;
                         case Transfer_Encoding.Quoted_Printable:
+                            strs[i] += "\r\n";                                      // 每段结尾补一个\r\n，以避免QP编码换行标志被破坏
+                            contentStr = strs[i].Replace("=\r\n", "").Replace("\r\n", "");        // 去除所有换行标记
                             data += (MyEncoder.DecodeWithQP(contentStr, body.Charset) + "\n");
                             break;
                         case Transfer_Encoding.Bit8:
+                            contentStr = strs[i].Replace("\r\n", "");               // 去除所有换行标记
                             data += (MyEncoder.DecodeWithBit8(contentStr, body.Charset) + "\n");
                             break;
                         case Transfer_Encoding.Bit7:
+                            contentStr = strs[i].Replace("\r\n", "");               // 去除所有换行标记
                             data += (contentStr + "\n");
                             break;
                         default:
+                            contentStr = strs[i].Replace("\r\n", "");               // 去除所有换行标记
                             data += (contentStr + "\n");
                             break;
                     }
@@ -442,55 +454,54 @@ namespace vMail
                 body.Disposition = GetDisposition(rawStr);
 
                 string[] paras = Regex.Split(rawStr, "\r\n\r\n");
-                string data = "";
-                string contentStr = paras[1].Replace("\r\n", "");           // 去除所有换行标记
+                byte[] data;
 
                 switch (body.EncodeType)                                    // 依据不同编码进行解码
                 {
                     case Transfer_Encoding.Base64:
-                        data = (MyEncoder.DecodeWithBase64(contentStr, body.Charset));
+                        data = MyEncoder.DecodeWithBase64(paras[1].Replace("\r\n", ""));
                         break;
                     case Transfer_Encoding.Quoted_Printable:
-                        data = (MyEncoder.DecodeWithQP(contentStr, body.Charset));
+                        data = MyEncoder.DecodeWithQP(paras[1].Replace("=\r\n", "").Replace("\r\n", ""));
                         break;
                     case Transfer_Encoding.Bit8:
-                        data = (MyEncoder.DecodeWithBit8(contentStr, body.Charset));
+                        data = MyEncoder.DecodeWithBit8(paras[1].Replace("\r\n", ""));
                         break;
                     case Transfer_Encoding.Bit7:
-                        data = (contentStr);
+                        data = Encoding.Default.GetBytes(paras[1].Replace("\r\n", ""));
                         break;
                     default:
-                        data = (contentStr);
+                        data = Encoding.Default.GetBytes(paras[1].Replace("\r\n", ""));
                         break;
                 }
-                body.Data = body.Charset.GetBytes(data);
+                body.Data = data;
             }
             else if (contentTypeStr.Contains("image"))                      // 图片类型
             {
                 body.Name = GetName(otherAttributes);
 
                 string[] paras = Regex.Split(rawStr, "\r\n\r\n");
-                string data = "";
+                byte[] data;
 
                 switch (body.EncodeType)                                    // 依据不同编码进行解码
                 {
                     case Transfer_Encoding.Base64:
-                        data = MyEncoder.DecodeWithBase64(paras[1].Replace("\r\n", ""), body.Charset);
+                        data = MyEncoder.DecodeWithBase64(paras[1].Replace("\r\n", ""));
                         break;
                     case Transfer_Encoding.Quoted_Printable:
-                        data = MyEncoder.DecodeWithQP(paras[1].Replace("=\r\n", "").Replace("\r\n", ""), body.Charset);
+                        data = MyEncoder.DecodeWithQP(paras[1].Replace("=\r\n", "").Replace("\r\n", ""));
                         break;
                     case Transfer_Encoding.Bit8:
-                        data = MyEncoder.DecodeWithBit8(paras[1].Replace("\r\n", ""), body.Charset);
+                        data = MyEncoder.DecodeWithBit8(paras[1].Replace("\r\n", ""));
                         break;
                     case Transfer_Encoding.Bit7:
-                        data = paras[1].Replace("\r\n", "");
+                        data = Encoding.Default.GetBytes(paras[1].Replace("\r\n", ""));
                         break;
                     default:
-                        data = paras[1].Replace("\r\n", "");
+                        data = Encoding.Default.GetBytes(paras[1].Replace("\r\n", ""));
                         break;
                 }
-                body.Data = body.Charset.GetBytes(data);
+                body.Data = data;
             }
             else
             {
@@ -517,7 +528,7 @@ namespace vMail
         }
 
         /* 将Email转换为可发送字符串 */
-        public static string ToMIMEStr(Email email)
+        public static string GetMIMEStr(Email email)
         {
             string mailStr = "";
 

@@ -39,6 +39,7 @@
     <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.ValueTuple.4.5.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
     </Reference>
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -57,8 +58,16 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Util\SMTP.cs" />
-    <Compile Include="Util\MyEncoder.cs" />
+    <Compile Include="LoginWindow.xaml.cs">
+      <DependentUpon>LoginWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="struct\Type.cs" />
+    <Compile Include="protocol\SMTP.cs" />
+    <Compile Include="util\MyEncoder.cs" />
+    <Page Include="LoginWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -67,15 +76,15 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Struct\Email.cs" />
+    <Compile Include="struct\Email.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MIME.cs" />
-    <Compile Include="Util\POP3.cs" />
+    <Compile Include="protocol\MIME.cs" />
+    <Compile Include="protocol\POP3.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -93,6 +102,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="ClassDiagram1.cd" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -103,7 +113,26 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="logo.png" />
+    <Resource Include="assets\download.png" />
+    <Resource Include="assets\image.png" />
+    <Resource Include="assets\logo.png" />
+    <Resource Include="assets\pdf.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="assets\delete.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="assets\login.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="assets\remove.png" />
+    <Resource Include="assets\fetch.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="assets\send.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="assets\add.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

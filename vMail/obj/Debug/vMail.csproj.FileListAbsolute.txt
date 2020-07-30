@@ -1,13 +1,14 @@
-F:\Code Manager\vMail\vMail\obj\Debug\vMail.csprojAssemblyReference.cache
-F:\Code Manager\vMail\vMail\obj\Debug\MainWindow.g.cs
-F:\Code Manager\vMail\vMail\obj\Debug\App.g.cs
-F:\Code Manager\vMail\vMail\obj\Debug\vMail_MarkupCompile.cache
-F:\Code Manager\vMail\vMail\obj\Debug\vMail_MarkupCompile.lref
 F:\Code Manager\vMail\vMail\bin\Debug\vMail.exe.config
 F:\Code Manager\vMail\vMail\bin\Debug\vMail.exe
 F:\Code Manager\vMail\vMail\bin\Debug\vMail.pdb
 F:\Code Manager\vMail\vMail\bin\Debug\System.ValueTuple.dll
 F:\Code Manager\vMail\vMail\bin\Debug\System.ValueTuple.xml
+F:\Code Manager\vMail\vMail\obj\Debug\LoginWindow.g.cs
+F:\Code Manager\vMail\vMail\obj\Debug\MainWindow.g.cs
+F:\Code Manager\vMail\vMail\obj\Debug\App.g.cs
+F:\Code Manager\vMail\vMail\obj\Debug\vMail_MarkupCompile.cache
+F:\Code Manager\vMail\vMail\obj\Debug\vMail_MarkupCompile.lref
+F:\Code Manager\vMail\vMail\obj\Debug\LoginWindow.baml
 F:\Code Manager\vMail\vMail\obj\Debug\MainWindow.baml
 F:\Code Manager\vMail\vMail\obj\Debug\vMail.g.resources
 F:\Code Manager\vMail\vMail\obj\Debug\vMail.Properties.Resources.resources
@@ -16,3 +17,4 @@ F:\Code Manager\vMail\vMail\obj\Debug\vMail.csproj.CoreCompileInputs.cache
 F:\Code Manager\vMail\vMail\obj\Debug\vMail.csproj.CopyComplete
 F:\Code Manager\vMail\vMail\obj\Debug\vMail.exe
 F:\Code Manager\vMail\vMail\obj\Debug\vMail.pdb
+F:\Code Manager\vMail\vMail\obj\Debug\vMail.csprojAssemblyReference.cache

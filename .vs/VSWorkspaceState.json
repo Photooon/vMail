@@ -1,8 +1,10 @@
 {
   "ExpandedNodes": [
     "",
-    "\\vMail"
+    "\\vMail",
+    "\\vMail\\struct",
+    "\\vMail\\util"
   ],
-  "SelectedNode": "\\vMail\\MainWindow.xaml",
+  "SelectedNode": "\\vMail\\vMail.csproj",
   "PreviewInSolutionExplorer": false
 }

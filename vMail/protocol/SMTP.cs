@@ -8,14 +8,14 @@ namespace vMail
 {
     class SMTP
     {
-        private Socket client;
-        private IPEndPoint endPoint;
-        private int status;
+        private Socket client;                                      // Socket
+        private IPEndPoint endPoint;                                // 服务器终端
+        private int status;                                         // 响应码
 
-        public delegate void StatusUpdateHandler(int status);
+        public delegate void StatusUpdateHandler(int status);       // 状态更新处理函数
         public event StatusUpdateHandler StatusUpdateEvent;         // 状态更新事件
 
-        public bool Connected
+        public bool Connected                                       // 当前与服务器的连接状态
         {
             get
             {
@@ -31,20 +31,13 @@ namespace vMail
             }
         }
 
-        public SMTP()
+        public SMTP()                                               // 默认构造函数
         {
             client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             status = 0;
         }
 
-        private string EncodeWithBase64(string str)
-        {
-            byte[] b = Encoding.Default.GetBytes(str);
-            string base64String = Convert.ToBase64String(b);     // 将b转为Base64编码的字符串
-            return base64String;
-        }
-
-        private void UpdateStatus(string reply)
+        public void UpdateStatus(string reply)                      // 更新状态码
         {
             if (reply.Length < 3)
             {
@@ -57,7 +50,32 @@ namespace vMail
             }
         }
 
-        private String SendCmd(string cmd, bool forBase64 = false, int count = 1)   // forBase64 = true, 则以Base64编码发送; count为默认接收次数
+        public void Init(string hostName, int hostPort)             // 初始化套接字
+        {
+            IPHostEntry iPHost = System.Net.Dns.GetHostEntry(hostName);        // 获取域名的IP地址
+
+            if (iPHost.AddressList.Length > 0)
+            {
+                IPAddress address = iPHost.AddressList[0];
+                endPoint = new IPEndPoint(address, hostPort);                  // 构建EndPoint
+
+            }
+        }
+
+        public void Login(String mail, String key)                  // 登录邮箱
+        {
+            if (endPoint != null)
+            {
+                client.Connect(endPoint);
+
+                SendCmd("EHLO vMail", false, 2);      // 标名用户身份
+                SendCmd("AUTH LOGIN");                //认证登录
+                SendCmd(mail, true);                  // 发送邮箱账号(开启Base64编码)
+                SendCmd(key, true);                   // 发送密钥(开启Base64编码)  
+            }
+        }
+
+        public String SendCmd(string cmd, bool forBase64 = false, int count = 1)   // 发送指定指令并接收回复。其中forBase64 = true, 则以Base64编码发送; count为默认接收次数
         {
             if (this.Connected)
             {
@@ -98,32 +116,7 @@ namespace vMail
             return "";
         }
 
-        public void Init(string hostName, int hostPort)                        // 构建EndPoint
-        {
-            IPHostEntry iPHost = System.Net.Dns.GetHostEntry(hostName);        // 获取域名的IP地址
-
-            if (iPHost.AddressList.Length > 0)
-            {
-                IPAddress address = iPHost.AddressList[0];
-                endPoint = new IPEndPoint(address, hostPort);
-                
-            }
-        }
-
-        public void Login(String mail, String key)
-        {
-            if (endPoint != null)
-            {
-                client.Connect(endPoint);
-
-                SendCmd("EHLO vMail", false, 2);      // 标名用户身份
-                SendCmd("AUTH LOGIN");                //认证登录
-                SendCmd(mail, true);                  // 发送邮箱账号(开启Base64编码)
-                SendCmd(key, true);                   // 发送密钥(开启Base64编码)  
-            }
-        }
-
-        public void SendEmail(Email email)
+        public void SendEmail(Email email)                          // 发送邮件
         {
             if (this.Connected)
             {
@@ -133,7 +126,7 @@ namespace vMail
                 this.SendCmd("DATA");
 
                 /*发送邮件*/
-                string str = MIME.ToMIMEStr(email);
+                string str = MIME.GetMIMEStr(email);
                 this.SendCmd(str, false, 0);
 
                 /*发送结束*/
@@ -141,13 +134,12 @@ namespace vMail
             }
         }
 
-        public void Close()
+        public void Close()                                         // 关闭与服务器的连接
         {
             if (this.Connected)
             {
                 this.SendCmd("QUIT");
             }
         }
-
     }
 }
